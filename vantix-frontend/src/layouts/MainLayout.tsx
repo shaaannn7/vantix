@@ -1,8 +1,12 @@
 import React from 'react';
+import { CommandPalette } from '@/components/navigation/CommandPalette';
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-obsidian text-white font-sans flex flex-col">
+      {/* Global Command Palette (Ctrl+K) */}
+      <CommandPalette />
+
       {/* Structural layout skeleton only - F1 dashboard shell */}
       <header className="h-[56px] border-b border-system-border bg-obsidian-muted px-lg flex items-center justify-between">
         <span className="font-mono text-sm tracking-widest text-system-cyan">VENTIX // HUD</span>

@@ -4,8 +4,6 @@ import {
   Sparkles, 
   Check, 
   X, 
-  ArrowRight, 
-  Activity, 
   Compass, 
   CheckCircle2,
   Users,
