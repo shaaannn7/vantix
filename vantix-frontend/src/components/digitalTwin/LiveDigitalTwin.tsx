@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Line } from '@react-three/drei';
+import { useTelemetryStore } from '@/store/telemetryStore';
 import * as THREE from 'three';
 import { 
   Map, 
@@ -11,7 +12,10 @@ import {
   Play, 
   Pause, 
   Compass, 
-  AlertTriangle
+  Activity, 
+  Flame, 
+  HeartPulse, 
+  LogOut
 } from 'lucide-react';
 
 // --- Types ---
@@ -39,14 +43,14 @@ const CameraController: React.FC<{ cameraView: string }> = ({ cameraView }) => {
   const { camera } = useThree();
 
   useEffect(() => {
-    const duration = 1000;
+    const duration = 1200;
     const startTime = performance.now();
     
-    let targetPos = new THREE.Vector3(0, 30, 38);
+    let targetPos = new THREE.Vector3(30, 22, 30);
     if (cameraView === 'top') targetPos.set(0, 42, 0.1);
     if (cameraView === 'isometric') targetPos.set(30, 22, 30);
-    if (cameraView === 'north') targetPos.set(0, 12, -36);
-    if (cameraView === 'south') targetPos.set(0, 12, 36);
+    if (cameraView === 'north') targetPos.set(0, 10, -28); // Zoom Gate C/D
+    if (cameraView === 'south') targetPos.set(-14, 8, 12);  // Zoom Sector West
     if (cameraView === 'pitch') targetPos.set(0, 3, 14);
 
     const startPos = camera.position.clone();
@@ -71,9 +75,6 @@ const CameraController: React.FC<{ cameraView: string }> = ({ cameraView }) => {
   return null;
 };
 
-
-
-// --- Main Interactive Viewport ---
 export const LiveDigitalTwin: React.FC = () => {
   // Navigation & Layers States
   const [activeLayers, setActiveLayers] = useState({
@@ -87,11 +88,30 @@ export const LiveDigitalTwin: React.FC = () => {
   const [activeDeck, setActiveDeck] = useState('lower');
   const [cameraView, setCameraView] = useState('isometric');
   const [predictionOffset, setPredictionOffset] = useState(0); // 0, 5, 15, 30 min
-  const [emergencyMode, setEmergencyMode] = useState(false);
   const [roofOpen, setRoofOpen] = useState(true);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [playbackActive, setPlaybackActive] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<IncidentPin | null>(null);
+
+  // Global Telemetry Store emergency synchronization
+  const emergencyType = useTelemetryStore((state) => state.emergencyType);
+  const setEmergencyType = useTelemetryStore((state) => state.setEmergencyType);
+
+  const emergencyMode = emergencyType !== 'none';
+
+  // Automatically sweep camera based on selected emergency type
+  useEffect(() => {
+    if (emergencyType === 'fire') {
+      setCameraView('south');
+    } else if (emergencyType === 'surge') {
+      setCameraView('north');
+    } else if (emergencyType === 'evacuation') {
+      setCameraView('top');
+      setRoofOpen(true); // Automatically retract roof panels on evacuation for ventilation
+    } else {
+      setCameraView('isometric');
+    }
+  }, [emergencyType]);
 
   const handleRoofToggle = () => {
     const nextState = !roofOpen;
@@ -105,8 +125,8 @@ export const LiveDigitalTwin: React.FC = () => {
 
   // Mock Telemetry Anchors
   const mockIncidents: IncidentPin[] = [
-    { id: 'inc-1', type: 'medical', title: 'Medical Alert: Sector 4', position: [-12, 1.5, 6], detail: 'Fan dehydration reported at Turnstile 14B.' },
-    { id: 'inc-2', type: 'security', title: 'Security Alert: Gate C', position: [16, 0.5, -8], detail: 'Queue bottleneck forming at auxiliary lanes.' },
+    { id: 'inc-1', type: 'fire', title: 'Thermal Alert: Sector West', position: [-12, 1.5, 6], detail: 'Thermal progression sensor flags 94°C on arch joint.' },
+    { id: 'inc-2', type: 'security', title: 'Security Alert: Gate C Ingress', position: [16, 0.5, -8], detail: 'Optical crowd count exceeds 4.2 fans/m².' },
   ];
 
   const mockVolunteers: Volunteer[] = [
@@ -124,15 +144,15 @@ export const LiveDigitalTwin: React.FC = () => {
   };
 
   return (
-    <div className="bg-obsidian-muted border border-system-border rounded-md flex flex-col h-full relative overflow-hidden select-none shadow-high">
+    <div className="bg-obsidian-muted border border-system-border rounded-xs flex flex-col h-full relative overflow-hidden select-none shadow-high font-sans">
       
       {/* 1. HUD Header Info */}
       <div className="absolute top-md left-md z-10 flex flex-col gap-2xs bg-obsidian-elevated/80 border border-system-border/60 p-sm rounded-xs backdrop-blur-command">
-        <span className="font-mono text-[9px] text-system-mutedText uppercase tracking-widest">Digital Twin</span>
-        <span className="text-xs font-bold text-white tracking-wide">Azteca Arena 3D HUD</span>
+        <span className="font-mono text-[8px] text-system-mutedText uppercase tracking-widest">AT&T Stadium Digital Twin</span>
+        <span className="text-xs font-bold text-white tracking-wide">Live Telemetry Model</span>
         <div className="flex items-center gap-xs font-mono text-[8px] text-system-cyan mt-[2px]">
           <span className="w-1.5 h-1.5 bg-system-green rounded-full animate-ping" />
-          <span>L3_RENDER_120FPS</span>
+          <span>L3_WORKSPACE_ONLINE (60FPS)</span>
         </div>
       </div>
 
@@ -140,60 +160,134 @@ export const LiveDigitalTwin: React.FC = () => {
       <div className="absolute top-md right-md z-10 flex items-center gap-xs bg-obsidian-elevated/80 border border-system-border/60 p-xs rounded-xs backdrop-blur-command">
         <button 
           onClick={() => setCameraView('top')}
-          className={`p-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'top' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
+          aria-label="Top down ortho camera angle"
+          aria-pressed={cameraView === 'top'}
+          className={`px-sm py-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'top' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
         >
-          Top View
+          Top
         </button>
         <div className="w-[1px] bg-system-border h-3" />
         <button 
           onClick={() => setCameraView('isometric')}
-          className={`p-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'isometric' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
+          aria-label="Isometric perspective camera angle"
+          aria-pressed={cameraView === 'isometric'}
+          className={`px-sm py-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'isometric' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
         >
-          Isometric
+          Iso
         </button>
         <div className="w-[1px] bg-system-border h-3" />
         <button 
           onClick={() => setCameraView('pitch')}
-          className={`p-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'pitch' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
+          aria-label="Ground level pitch side camera angle"
+          aria-pressed={cameraView === 'pitch'}
+          className={`px-sm py-xs font-mono text-[9px] uppercase rounded-2xs ${cameraView === 'pitch' ? 'text-system-cyan font-bold bg-system-cyan/10' : 'text-system-mutedText hover:text-white'}`}
         >
-          Pitch View
+          Pitch
         </button>
       </div>
 
       {/* 3. Left floor Deck levels controls */}
       <div className="absolute bottom-[80px] left-md z-10 flex flex-col gap-2xs bg-obsidian-elevated/80 border border-system-border/60 p-xs rounded-xs backdrop-blur-command">
+        <span className="font-mono text-[7px] text-system-mutedText uppercase text-center border-b border-system-border/40 pb-[2px] mb-[2px]">Decks</span>
         {['upper', 'mid', 'lower'].map((deck) => (
           <button 
             key={deck}
             onClick={() => setActiveDeck(deck)}
+            aria-label={`Select ${deck} tier`}
+            aria-pressed={activeDeck === deck}
             className={`px-sm py-[4px] rounded-2xs text-[9px] font-mono uppercase text-left transition-colors ${
               activeDeck === deck 
                 ? 'bg-system-cyan/20 border border-system-cyan/30 text-system-cyan font-bold' 
                 : 'text-system-mutedText hover:text-white'
             }`}
           >
-            {deck} deck
+            {deck}
           </button>
         ))}
       </div>
 
-      {/* 4. Left side Emergency Mode activator */}
-      <div className="absolute top-[90px] left-md z-10 flex flex-col gap-xs">
-        <button 
-          onClick={() => setEmergencyMode(!emergencyMode)}
-          className={`flex items-center gap-xs px-sm py-xs border rounded-xs font-mono text-[9px] uppercase transition-all duration-200 ${
-            emergencyMode 
-              ? 'bg-system-crimson border-system-crimson/40 text-white shadow-alert-glow animate-strobe font-bold' 
-              : 'bg-obsidian-elevated/80 border-system-border text-system-mutedText hover:text-white hover:bg-obsidian-sub'
-          }`}
-        >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          <span>{emergencyMode ? 'EMERGENCY: ACTIVE' : 'Emergency Mode'}</span>
-        </button>
+      {/* 4. Left side Emergency Crisis Interactive Selector (Tesla / Smart City style segment buttons) */}
+      <div className="absolute top-[80px] left-md z-10 flex flex-col gap-xs w-[172px]">
+        <div className="bg-obsidian-elevated/80 border border-system-border/60 p-sm rounded-xs backdrop-blur-command flex flex-col gap-xs">
+          <span className="font-mono text-[8px] text-system-mutedText uppercase tracking-wider font-semibold">Triage Simulation</span>
+          
+          <div className="grid grid-cols-1 gap-[2px] font-mono text-[8px]">
+            {/* NORMAL STATE */}
+            <button
+              onClick={() => setEmergencyType('none')}
+              aria-label="Set operations to nominal status"
+              className={`flex items-center gap-xs px-sm py-[5px] rounded-2xs text-left border transition-all ${
+                emergencyType === 'none'
+                  ? 'bg-system-green/10 border-system-green/30 text-system-green font-bold'
+                  : 'bg-obsidian border-transparent text-system-mutedText hover:text-white'
+              }`}
+            >
+              <Activity className="w-3 h-3" />
+              <span>Normal Ops</span>
+            </button>
+
+            {/* FIRE CRISIS */}
+            <button
+              onClick={() => setEmergencyType('fire')}
+              aria-label="Simulate fire incident in West concourse"
+              className={`flex items-center gap-xs px-sm py-[5px] rounded-2xs text-left border transition-all ${
+                emergencyType === 'fire'
+                  ? 'bg-system-crimson/10 border-system-crimson/30 text-system-crimson font-bold'
+                  : 'bg-obsidian border-transparent text-system-mutedText hover:text-white'
+              }`}
+            >
+              <Flame className="w-3 h-3" />
+              <span>Fire Threat</span>
+            </button>
+
+            {/* MEDICAL ASSIST */}
+            <button
+              onClick={() => setEmergencyType('medical')}
+              aria-label="Simulate medical distress incident near concessions"
+              className={`flex items-center gap-xs px-sm py-[5px] rounded-2xs text-left border transition-all ${
+                emergencyType === 'medical'
+                  ? 'bg-system-cyan/10 border-system-cyan/30 text-system-cyan font-bold'
+                  : 'bg-obsidian border-transparent text-system-mutedText hover:text-white'
+              }`}
+            >
+              <HeartPulse className="w-3 h-3" />
+              <span>Medical Alert</span>
+            </button>
+
+            {/* CROWD SURGE */}
+            <button
+              onClick={() => setEmergencyType('surge')}
+              aria-label="Simulate crowd bottleneck at main ingress turnstile"
+              className={`flex items-center gap-xs px-sm py-[5px] rounded-2xs text-left border transition-all ${
+                emergencyType === 'surge'
+                  ? 'bg-system-purple/10 border-system-purple/30 text-system-purple font-bold'
+                  : 'bg-obsidian border-transparent text-system-mutedText hover:text-white'
+              }`}
+            >
+              <Users className="w-3 h-3" />
+              <span>Crowd Surge</span>
+            </button>
+
+            {/* EVACUATION */}
+            <button
+              onClick={() => setEmergencyType('evacuation')}
+              aria-label="Trigger full stadium evacuation protocol"
+              className={`flex items-center gap-xs px-sm py-[5px] rounded-2xs text-left border transition-all ${
+                emergencyType === 'evacuation'
+                  ? 'bg-system-amber/20 border-system-amber/40 text-system-amber font-bold animate-pulse'
+                  : 'bg-obsidian border-transparent text-system-mutedText hover:text-white'
+              }`}
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Mass Evac</span>
+            </button>
+          </div>
+        </div>
 
         <button 
           onClick={handleRoofToggle}
-          className={`flex items-center justify-center px-sm py-xs border rounded-xs font-mono text-[9px] uppercase transition-all duration-200 bg-obsidian-elevated/80 ${
+          aria-label="Toggle retractable roof open or closed"
+          className={`flex items-center justify-center py-xs border rounded-xs font-mono text-[9px] uppercase transition-all duration-200 bg-obsidian-elevated/80 ${
             roofOpen 
               ? 'border-system-cyan/50 text-system-cyan font-bold hover:border-system-cyan' 
               : 'border-system-border text-system-mutedText hover:text-white hover:bg-obsidian-sub'
@@ -209,6 +303,8 @@ export const LiveDigitalTwin: React.FC = () => {
         
         <button 
           onClick={() => toggleLayer('heatmap')}
+          aria-label="Toggle crowd density heatmap layer"
+          aria-pressed={activeLayers.heatmap}
           className={`flex items-center gap-sm px-sm py-[5px] rounded-2xs text-[10px] font-mono border transition-colors ${
             activeLayers.heatmap 
               ? 'bg-system-purple/10 border-system-purple/20 text-system-purple' 
@@ -221,6 +317,8 @@ export const LiveDigitalTwin: React.FC = () => {
 
         <button 
           onClick={() => toggleLayer('crowd')}
+          aria-label="Toggle active crowd flow lines"
+          aria-pressed={activeLayers.crowd}
           className={`flex items-center gap-sm px-sm py-[5px] rounded-2xs text-[10px] font-mono border transition-colors ${
             activeLayers.crowd 
               ? 'bg-system-cyan/10 border-system-cyan/20 text-system-cyan' 
@@ -233,6 +331,8 @@ export const LiveDigitalTwin: React.FC = () => {
 
         <button 
           onClick={() => toggleLayer('volunteers')}
+          aria-label="Toggle volunteer GPS locs"
+          aria-pressed={activeLayers.volunteers}
           className={`flex items-center gap-sm px-sm py-[5px] rounded-2xs text-[10px] font-mono border transition-colors ${
             activeLayers.volunteers 
               ? 'bg-system-green/10 border-system-green/20 text-system-green' 
@@ -245,6 +345,8 @@ export const LiveDigitalTwin: React.FC = () => {
 
         <button 
           onClick={() => toggleLayer('emergency')}
+          aria-label="Toggle active warning beacons"
+          aria-pressed={activeLayers.emergency}
           className={`flex items-center gap-sm px-sm py-[5px] rounded-2xs text-[10px] font-mono border transition-colors ${
             activeLayers.emergency 
               ? 'bg-system-crimson/10 border-system-crimson/20 text-system-crimson' 
@@ -257,6 +359,8 @@ export const LiveDigitalTwin: React.FC = () => {
 
         <button 
           onClick={() => toggleLayer('transport')}
+          aria-label="Toggle transit arrival points"
+          aria-pressed={activeLayers.transport}
           className={`flex items-center gap-sm px-sm py-[5px] rounded-2xs text-[10px] font-mono border transition-colors ${
             activeLayers.transport 
               ? 'bg-system-amber/10 border-system-amber/20 text-system-amber' 
@@ -289,33 +393,36 @@ export const LiveDigitalTwin: React.FC = () => {
             />
           )}
 
-
-
           {/* Incident beacons (pins) layer */}
-          {activeLayers.emergency && mockIncidents.map((inc) => (
-            <group key={inc.id} position={inc.position}>
-              {/* Beacons cylinder */}
-              <mesh>
-                <cylinderGeometry args={[0.02, 0.4, 3, 16]} />
-                <meshBasicMaterial color="#ef4444" opacity={0.35} transparent />
-              </mesh>
-              {/* Beacons head */}
-              <mesh position={[0, 1.5, 0]} onClick={() => setSelectedIncident(inc)}>
-                <sphereGeometry args={[0.3, 16, 16]} />
-                <meshBasicMaterial color="#ef4444" />
-              </mesh>
+          {activeLayers.emergency && mockIncidents.map((inc) => {
+            const isMatchingCrisis = emergencyType === inc.type || (emergencyType === 'surge' && inc.type === 'security') || (emergencyType === 'evacuation');
+            if (emergencyType !== 'none' && !isMatchingCrisis) return null;
 
-              {/* Floating HTML 2D Label */}
-              <Html distanceFactor={14} position={[0, 2, 0]}>
-                <button 
-                  onClick={() => setSelectedIncident(inc)}
-                  className="bg-obsidian-elevated/90 border border-system-crimson/50 text-[9px] font-mono text-white px-sm py-[2px] rounded-2xs whitespace-nowrap hover:bg-system-crimson transition-colors"
-                >
-                  {inc.title}
-                </button>
-              </Html>
-            </group>
-          ))}
+            return (
+              <group key={inc.id} position={inc.position}>
+                {/* Beacons cylinder */}
+                <mesh>
+                  <cylinderGeometry args={[0.02, 0.4, 3, 16]} />
+                  <meshBasicMaterial color="#ef4444" opacity={0.35} transparent />
+                </mesh>
+                {/* Beacons head */}
+                <mesh position={[0, 1.5, 0]} onClick={() => setSelectedIncident(inc)}>
+                  <sphereGeometry args={[0.3, 16, 16]} />
+                  <meshBasicMaterial color="#ef4444" />
+                </mesh>
+
+                {/* Floating HTML 2D Label */}
+                <Html distanceFactor={14} position={[0, 2, 0]}>
+                  <button 
+                    onClick={() => setSelectedIncident(inc)}
+                    className="bg-obsidian-elevated/90 border border-system-crimson/50 text-[9px] font-mono text-white px-sm py-[2px] rounded-2xs whitespace-nowrap hover:bg-system-crimson transition-colors"
+                  >
+                    {inc.title}
+                  </button>
+                </Html>
+              </group>
+            );
+          })}
 
           {/* Volunteer positions layer */}
           {activeLayers.volunteers && mockVolunteers.map((vol) => (
@@ -347,8 +454,25 @@ export const LiveDigitalTwin: React.FC = () => {
             </group>
           ))}
 
-          {/* Emergency Evacuation Spline Path */}
-          {emergencyMode && (
+          {/* Dynamic Splines for Guidance / Evacuation */}
+          {emergencyType === 'fire' && (
+            <Line 
+              points={[[-12, 0.5, 6], [-2, 0.3, 8], [8, 0.3, 14], [18, 0.4, 22]]} 
+              color="#ef4444" 
+              lineWidth={2} 
+              dashed 
+            />
+          )}
+
+          {emergencyType === 'surge' && (
+            <Line 
+              points={[[16, 0.2, -8], [8, 0.2, -14], [0, 0.2, -18], [-10, 0.2, -22]]} 
+              color="#a855f7" 
+              lineWidth={3} 
+            />
+          )}
+
+          {emergencyType === 'evacuation' && (
             <Line 
               points={[[-12, 0.5, 6], [-8, 0.3, 2], [0, 0.3, -10], [16, 0.4, -18]]} 
               color="#10b981" 
@@ -357,7 +481,6 @@ export const LiveDigitalTwin: React.FC = () => {
             />
           )}
 
-          {/* Navigation Spline Path */}
           {selectedSeat && (
             <Line 
               points={[[-2, 0.2, -2], [2, 0.2, 2], [6, 0.2, 8]]} 
@@ -399,6 +522,7 @@ export const LiveDigitalTwin: React.FC = () => {
         <div className="flex items-center gap-md shrink-0">
           <button 
             onClick={() => setPlaybackActive(!playbackActive)}
+            aria-label={playbackActive ? "Pause simulation tracking" : "Resume simulation tracking"}
             className="p-xs bg-obsidian hover:bg-obsidian-sub border border-system-border rounded-2xs text-system-cyan hover:text-white transition-colors"
           >
             {playbackActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -417,6 +541,7 @@ export const LiveDigitalTwin: React.FC = () => {
             type="range" 
             min="0" 
             max="3" 
+            aria-label="Adjust simulation time prediction offset"
             value={predictionOffset === 0 ? 0 : predictionOffset === 5 ? 1 : predictionOffset === 15 ? 2 : 3}
             onChange={(e) => {
               const vals = [0, 5, 15, 30];
@@ -433,6 +558,8 @@ export const LiveDigitalTwin: React.FC = () => {
         <div className="shrink-0 flex items-center gap-sm">
           <button 
             onClick={() => setSelectedSeat(selectedSeat ? null : 'SEC-104')}
+            aria-label="Toggle passenger seat routing guide"
+            aria-pressed={!!selectedSeat}
             className={`px-sm py-xs border rounded-xs font-mono text-[9px] uppercase transition-colors ${
               selectedSeat 
                 ? 'bg-system-cyan/20 border-system-cyan/40 text-system-cyan font-bold' 
@@ -446,4 +573,5 @@ export const LiveDigitalTwin: React.FC = () => {
     </div>
   );
 };
+
 export default LiveDigitalTwin;

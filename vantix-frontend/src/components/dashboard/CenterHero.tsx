@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useTelemetryStore } from '@/store/telemetryStore';
 import { Users, ShieldAlert, Cpu, Activity } from 'lucide-react';
 
 const ATTENDANCE_START = 80000;
@@ -6,6 +7,7 @@ const ATTENDANCE_END = 83412;
 
 export const CenterHero: React.FC = React.memo(() => {
   const [attendance, setAttendance] = useState(ATTENDANCE_START);
+  const emergencyType = useTelemetryStore((state) => state.emergencyType);
 
   useEffect(() => {
     const totalSteps = 60;
@@ -20,6 +22,58 @@ export const CenterHero: React.FC = React.memo(() => {
     return () => clearInterval(timer);
   }, []);
 
+  // Compute status metrics based on the globally synchronized emergency type
+  const metrics = useMemo(() => {
+    switch (emergencyType) {
+      case 'fire':
+        return {
+          riskText: 'CRITICAL',
+          riskSub: '0.94 index',
+          riskColor: 'text-system-crimson font-bold animate-pulse',
+          healthText: '74.8%',
+          healthSub: 'Fire alert active',
+          healthColor: 'text-system-crimson font-bold',
+        };
+      case 'medical':
+        return {
+          riskText: 'MEDIUM',
+          riskSub: '0.38 index',
+          riskColor: 'text-system-cyan font-bold',
+          healthText: '94.1%',
+          healthSub: 'Medical dispatch',
+          healthColor: 'text-white',
+        };
+      case 'surge':
+        return {
+          riskText: 'HIGH',
+          riskSub: '0.65 index',
+          riskColor: 'text-system-purple font-bold',
+          healthText: '89.2%',
+          healthSub: 'Ingress flow lag',
+          healthColor: 'text-system-purple font-bold',
+        };
+      case 'evacuation':
+        return {
+          riskText: 'CRITICAL',
+          riskSub: '0.99 index',
+          riskColor: 'text-system-crimson font-bold animate-strobe',
+          healthText: '42.5%',
+          healthSub: 'Egress active',
+          healthColor: 'text-system-crimson font-bold',
+        };
+      case 'none':
+      default:
+        return {
+          riskText: 'Low',
+          riskSub: '0.12 index',
+          riskColor: 'text-system-green',
+          healthText: '98.4%',
+          healthSub: 'Nominal',
+          healthColor: 'text-white',
+        };
+    }
+  }, [emergencyType]);
+
   const stats = [
     {
       icon: Users,
@@ -31,23 +85,23 @@ export const CenterHero: React.FC = React.memo(() => {
     {
       icon: ShieldAlert,
       label: 'Risk Level',
-      value: 'Low',
-      sub: '0.12 index',
-      color: 'text-system-green',
+      value: metrics.riskText,
+      sub: metrics.riskSub,
+      color: metrics.riskColor,
     },
     {
       icon: Cpu,
       label: 'AI Readiness',
-      value: '99.8%',
-      sub: 'All agents active',
-      color: 'text-system-purple',
+      value: emergencyType !== 'none' ? 'CRITICAL MODE' : '99.8%',
+      sub: emergencyType !== 'none' ? 'Action active' : 'All agents active',
+      color: emergencyType !== 'none' ? 'text-system-purple font-bold' : 'text-system-purple',
     },
     {
       icon: Activity,
       label: 'Arena Health',
-      value: '98.4%',
-      sub: 'Nominal',
-      color: 'text-white',
+      value: metrics.healthText,
+      sub: metrics.healthSub,
+      color: metrics.healthColor,
     },
   ];
 

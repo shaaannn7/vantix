@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useTelemetryStore } from './telemetryStore';
+import type { CrowdTelemetryPoint } from '@/types/crowd';
+import type { EmergencyIncident } from '@/types/emergency';
 
 describe('telemetryStore state machine', () => {
   beforeEach(() => {
@@ -13,6 +15,7 @@ describe('telemetryStore state machine', () => {
         websocketStatus: 'CONNECTED',
       },
       showSearch: false,
+      emergencyType: 'none',
     });
   });
 
@@ -24,13 +27,13 @@ describe('telemetryStore state machine', () => {
   });
 
   it('updates metrics correctly', () => {
-    const mockPoint = {
+    const mockPoint: CrowdTelemetryPoint = {
       sectorId: 'sector-west',
       density: 0.75,
-      capacity: 12000,
-      headcount: 9000,
       flowRate: 35,
-      alertStatus: 'NORMAL' as const,
+      gateStatus: 'OPEN',
+      optimalRate: 50,
+      timestamp: 1713456789000,
     };
 
     useTelemetryStore.getState().updateMetric('sector-west', mockPoint);
@@ -40,15 +43,15 @@ describe('telemetryStore state machine', () => {
   });
 
   it('adds incidents correctly', () => {
-    const mockIncident = {
+    const mockIncident: EmergencyIncident = {
       id: 'inc-12',
       title: 'Queue Bottleneck at Concourse C',
-      type: 'security' as const,
-      severity: 'HIGH' as const,
-      status: 'MONITORING' as const,
-      response: '5m',
-      position: [10, 1.5, -5] as [number, number, number],
-      detail: 'Queue processing delay detected at Sector West ingress check.'
+      location: 'Gate C Ingress',
+      severity: 'high',
+      status: 'reported',
+      reporter: 'AI_INGRESS_BOT_01',
+      timestamp: 1713456789000,
+      coordinates: [10, -5],
     };
 
     useTelemetryStore.getState().addIncident(mockIncident);
@@ -65,5 +68,11 @@ describe('telemetryStore state machine', () => {
     expect(state.systemStatus.latencyMs).toBe(18);
     expect(state.systemStatus.websocketStatus).toBe('DISCONNECTED');
     expect(state.systemStatus.dbSync).toBe('OK'); // preserves unchanged properties
+  });
+
+  it('updates emergency type correctly', () => {
+    useTelemetryStore.getState().setEmergencyType('fire');
+    const state = useTelemetryStore.getState();
+    expect(state.emergencyType).toBe('fire');
   });
 });

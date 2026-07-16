@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import React from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { RoleRouteGuard } from './RoleRouteGuard';
@@ -57,7 +56,7 @@ describe('RoleRouteGuard component', () => {
         userId: '1',
         username: 'guest_01',
         fullName: 'Visitor',
-        role: 'GUEST',
+        role: 'FAN',
       },
       isAuthenticated: true,
     });

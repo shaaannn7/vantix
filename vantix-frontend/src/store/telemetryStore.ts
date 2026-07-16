@@ -8,11 +8,13 @@ interface TelemetryState {
   incidents: EmergencyIncident[];
   systemStatus: SystemStatus;
   showSearch: boolean;
+  emergencyType: 'none' | 'fire' | 'medical' | 'surge' | 'evacuation';
   updateMetric: (sectorId: string, point: CrowdTelemetryPoint) => void;
   setIncidents: (incidents: EmergencyIncident[]) => void;
   setSystemStatus: (status: Partial<SystemStatus>) => void;
   setShowSearch: (show: boolean) => void;
   addIncident: (incident: EmergencyIncident) => void;
+  setEmergencyType: (type: 'none' | 'fire' | 'medical' | 'surge' | 'evacuation') => void;
 }
 
 export const useTelemetryStore = create<TelemetryState>((set) => ({
@@ -24,6 +26,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     websocketStatus: 'CONNECTED',
   },
   showSearch: false,
+  emergencyType: 'none',
   updateMetric: (sectorId, point) =>
     set((state) => ({
       metrics: { ...state.metrics, [sectorId]: point },
@@ -35,4 +38,5 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
     })),
   setShowSearch: (show) => set({ showSearch: show }),
   addIncident: (incident) => set((state) => ({ incidents: [...state.incidents, incident] })),
+  setEmergencyType: (type) => set({ emergencyType: type }),
 }));
