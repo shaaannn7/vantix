@@ -170,6 +170,16 @@ export const LiveDigitalTwin: React.FC = () => {
   const [playbackActive, setPlaybackActive] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<IncidentPin | null>(null);
 
+  const handleRoofToggle = () => {
+    const nextState = !roofOpen;
+    setRoofOpen(nextState);
+    const previousView = cameraView;
+    setCameraView('top');
+    setTimeout(() => {
+      setCameraView(previousView);
+    }, 2800);
+  };
+
   // Mock Telemetry Anchors
   const mockIncidents: IncidentPin[] = [
     { id: 'inc-1', type: 'medical', title: 'Medical Alert: Sector 4', position: [-12, 1.5, 6], detail: 'Fan dehydration reported at Turnstile 14B.' },
@@ -259,7 +269,7 @@ export const LiveDigitalTwin: React.FC = () => {
         </button>
 
         <button 
-          onClick={() => setRoofOpen(!roofOpen)}
+          onClick={handleRoofToggle}
           className={`flex items-center justify-center px-sm py-xs border rounded-xs font-mono text-[9px] uppercase transition-all duration-200 bg-obsidian-elevated/80 ${
             roofOpen 
               ? 'border-system-cyan/50 text-system-cyan font-bold hover:border-system-cyan' 
