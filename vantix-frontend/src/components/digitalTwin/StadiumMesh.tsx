@@ -8,6 +8,7 @@ import StructuralArch from './Stadium/StructuralArch';
 import Roof from './Stadium/Roof';
 import Gates from './Stadium/Gates';
 import Lighting from './Stadium/Lighting';
+import MatchSimulation from './Stadium/MatchSimulation';
 
 interface StadiumMeshProps {
   activeDeck: string;
@@ -126,6 +127,9 @@ export const StadiumMesh: React.FC<StadiumMeshProps> = ({
 
       {/* 2. Football field pitch turf, boundaries, benches, and goalposts */}
       <Field />
+
+      {/* Live active match simulation players layer */}
+      <MatchSimulation />
 
       {/* 3. Seating bowl concrete supporting structure */}
       <Bowl activeDeck={activeDeck} />

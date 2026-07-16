@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Line } from '@react-three/drei';
-import { PlayerCoordinateTracker } from './PlayerCoordinateTracker';
 import * as THREE from 'three';
 import { 
   Map, 
@@ -72,83 +71,7 @@ const CameraController: React.FC<{ cameraView: string }> = ({ cameraView }) => {
   return null;
 };
 
-// --- Real-time Player Coordinate Tracking layer ---
-const PlayerTrackingLayer: React.FC<{ playbackActive: boolean }> = ({ playbackActive }) => {
-  const tracker = React.useMemo(() => new PlayerCoordinateTracker(), []);
 
-  const playersList = [
-    { id: 'p-mex-10', name: 'G. Dos Santos', team: 'MEX', color: '#10b981', text: '#ffffff', number: 10 },
-    { id: 'p-bra-09', name: 'Neymar Jr', team: 'BRA', color: '#eab308', text: '#1e3a5f', number: 9 },
-    { id: 'p-mex-04', name: 'R. Marquez', team: 'MEX', color: '#059669', text: '#ffffff', number: 4 }
-  ];
-
-  // Ingest initial coordinates
-  React.useEffect(() => {
-    tracker.ingestCoordinates({ playerId: 'p-mex-10', x: 12.4, z: -4.8 });
-    tracker.ingestCoordinates({ playerId: 'p-bra-09', x: 14.8, z: -2.2 });
-    tracker.ingestCoordinates({ playerId: 'p-mex-04', x: 8.1, z: -8.5 });
-  }, [tracker]);
-
-  // Simulate active movement over time inside ThreeJS frame ticks
-  useFrame(({ clock }) => {
-    if (!playbackActive) return;
-    const t = clock.getElapsedTime();
-
-    tracker.ingestCoordinates({
-      playerId: 'p-mex-10',
-      x: 14 + Math.cos(t * 1.2) * 5,
-      z: -3 + Math.sin(t * 0.8) * 4
-    });
-
-    tracker.ingestCoordinates({
-      playerId: 'p-bra-09',
-      x: 18 + Math.sin(t * 1.5) * 6,
-      z: 1 + Math.cos(t * 1.1) * 5
-    });
-
-    tracker.ingestCoordinates({
-      playerId: 'p-mex-04',
-      x: 10 + Math.sin(t * 1.5) * 5.2,
-      z: -6 + Math.cos(t * 1.1) * 4.2
-    });
-
-    // Apply linear interpolation smoothing
-    tracker.updateSmoothing(0.08);
-  });
-
-  return (
-    <group>
-      {playersList.map((p) => {
-        const pos = tracker.getPlayerPosition(p.id);
-        if (!pos) return null;
-        return (
-          <group key={p.id} position={[pos.x, pos.y, pos.z]}>
-            {/* Player 3D Disc */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.32, 0.32, 0.06, 16]} />
-              <meshStandardMaterial color={p.color} roughness={0.3} metalness={0.6} />
-            </mesh>
-            {/* Player Ring indicator */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-              <ringGeometry args={[0.35, 0.42, 16]} />
-              <meshBasicMaterial color="#ffffff" opacity={0.6} transparent />
-            </mesh>
-
-            {/* Floating Jersey / Name Badge */}
-            <Html distanceFactor={14} position={[0, 0.45, 0]}>
-              <div className="flex items-center gap-xs bg-obsidian-elevated/90 border border-system-border px-sm py-[2px] rounded-xs text-[9px] font-mono whitespace-nowrap shadow-high text-white">
-                <span className="font-bold px-[4px] py-[1px] rounded-2xs text-[8px]" style={{ backgroundColor: p.color, color: p.text }}>
-                  {p.number}
-                </span>
-                <span>{p.name}</span>
-              </div>
-            </Html>
-          </group>
-        );
-      })}
-    </group>
-  );
-};
 
 // --- Main Interactive Viewport ---
 export const LiveDigitalTwin: React.FC = () => {
@@ -366,8 +289,7 @@ export const LiveDigitalTwin: React.FC = () => {
             />
           )}
 
-          {/* Live Player Telemetry Tracking Layer */}
-          <PlayerTrackingLayer playbackActive={playbackActive} />
+
 
           {/* Incident beacons (pins) layer */}
           {activeLayers.emergency && mockIncidents.map((inc) => (
