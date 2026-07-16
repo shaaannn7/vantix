@@ -5,7 +5,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
     <div className="min-h-screen bg-obsidian text-white font-sans flex flex-col">
       {/* Structural layout skeleton only - F1 dashboard shell */}
       <header className="h-[56px] border-b border-system-border bg-obsidian-muted px-lg flex items-center justify-between">
-        <span className="font-mono text-sm tracking-widest text-system-cyan">VANTIX // HUD</span>
+        <span className="font-mono text-sm tracking-widest text-system-cyan">VENTIX // HUD</span>
       </header>
       <main className="flex-1 flex overflow-hidden">
         <aside className="w-[280px] border-r border-system-border bg-obsidian-muted p-md hidden md:block">

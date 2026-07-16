@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Dict, Any
 
-logger = logging.getLogger("VantixGemini")
+logger = logging.getLogger("VentixGemini")
 
 class GeminiService:
     def __init__(self):

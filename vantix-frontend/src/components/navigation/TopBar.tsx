@@ -30,7 +30,7 @@ export const TopBar: React.FC = () => {
       <div className="flex items-center gap-xl">
         {/* Brand */}
         <span className="font-mono text-sm font-bold text-white tracking-[0.15em] uppercase">
-          Vantix
+          Ventix
         </span>
 
         {/* Divider */}

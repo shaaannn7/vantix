@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph, START, END
-from app.graph.state import VantixState
+from app.graph.state import VentixState
 from app.agents.specialized import (
     CrowdIntelligenceAgent,
     TransportAgent,
@@ -35,13 +35,13 @@ agents_map = {
 
 commander = CommanderAgent()
 
-def run_specialized_agents(state: VantixState) -> dict:
+def run_specialized_agents(state: VentixState) -> dict:
     reports = {}
     for key, agent in agents_map.items():
         reports[key] = agent.evaluate(state)
     return {"agent_reports": reports, "current_step": "specialized_agents_complete"}
 
-def run_commander(state: VantixState) -> dict:
+def run_commander(state: VentixState) -> dict:
     reports = state.get("agent_reports", {})
     plan = commander.orchestrate(reports, state)
     
@@ -58,7 +58,7 @@ def run_commander(state: VantixState) -> dict:
         "current_step": "commander_planning_complete"
     }
 
-def human_approval_router(state: VantixState) -> str:
+def human_approval_router(state: VentixState) -> str:
     # Routes based on commander plan and operator feedback approvals
     plan = state.get("commander_plan")
     if not plan:
@@ -71,14 +71,14 @@ def human_approval_router(state: VantixState) -> str:
         return "human_approval_required"
     return "execute_dispatches"
 
-def human_wait_node(state: VantixState) -> dict:
+def human_wait_node(state: VentixState) -> dict:
     # Halts execution, waits for external API trigger to supply approved action IDs
     return {
         "current_step": "human_wait_state",
         "requires_approval": True
     }
 
-def execute_dispatches(state: VantixState) -> dict:
+def execute_dispatches(state: VentixState) -> dict:
     # Runs the action mutations on simulated resources
     return {
         "current_step": "execution_complete",
@@ -86,7 +86,7 @@ def execute_dispatches(state: VantixState) -> dict:
     }
 
 # Build LangGraph StateGraph
-builder = StateGraph(VantixState)
+builder = StateGraph(VentixState)
 
 builder.add_node("specialized_agents", run_specialized_agents)
 builder.add_node("commander", run_commander)
@@ -112,4 +112,4 @@ builder.add_edge("human_wait", END)
 builder.add_edge("execute_dispatches", END)
 
 # Compile graph
-vantix_workflow = builder.compile()
+ventix_workflow = builder.compile()

@@ -1,7 +1,7 @@
 from typing import TypedDict, Dict, List, Any, Optional
 from app.schemas.api import AgentReport, CommanderPlan
 
-class VantixState(TypedDict):
+class VentixState(TypedDict):
     # Telemetry configuration input parameters
     severity: str
     weather: str

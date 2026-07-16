@@ -14,7 +14,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     {
       id: 'welcome',
       sender: 'ai',
-      content: 'Vantix AI operational reasoning system initialized.',
+      content: 'Ventix AI operational reasoning system initialized.',
       timestamp: Date.now(),
     }
   ]);

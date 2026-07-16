@@ -5,12 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
-from app.graph.workflow import vantix_workflow
+from app.graph.workflow import ventix_workflow
 from app.services.websocket import manager
 from app.schemas.api import OperatorFeedback, CommanderPlan
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("VantixMain")
+logger = logging.getLogger("VentixMain")
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -22,11 +22,11 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3002",
     "https://ventix-mu.vercel.app",
-    "https://vantix-mu.vercel.app",
+    "https://ventix-mu.vercel.app",
 ]
 
 app = FastAPI(
-    title="Vantix Stadium Intelligence OS",
+    title="Ventix Stadium Intelligence OS",
     description="Multi-agent LangGraph backend for FIFA World Cup 2026 operations.",
     version="1.0.0"
 )
@@ -91,7 +91,7 @@ async def trigger_simulation(req: SimulationRequest, token: str = Depends(verify
 
     try:
         # Run graph workflow up to human approval gate
-        result_state = vantix_workflow.invoke(initial_state)
+        result_state = ventix_workflow.invoke(initial_state)
         
         # Save to file persistence store
         persistence_store.set(sim_id, result_state)
@@ -129,7 +129,7 @@ async def approve_action(feedback: OperatorFeedback, token: str = Depends(verify
         state["operator_feedback"] = feedback.model_dump()
         
         # Resume LangGraph thread from wait state
-        resumed_state = vantix_workflow.invoke(state)
+        resumed_state = ventix_workflow.invoke(state)
         persistence_store.set(sim_id, resumed_state)
 
         # Broadcast update to web socket connection clients

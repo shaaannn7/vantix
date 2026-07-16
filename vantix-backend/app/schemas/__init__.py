@@ -1,1 +1,1 @@
-# Vantix Schemas Subpackage
+# Ventix Schemas Subpackage

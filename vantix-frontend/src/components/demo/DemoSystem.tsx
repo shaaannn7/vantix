@@ -52,8 +52,8 @@ export const DemoSystem: React.FC = () => {
       const { type, title, body } = customEvent.detail;
       triggerToast(type, title, body);
     };
-    window.addEventListener('vantix-toast', handleToastEvent);
-    return () => window.removeEventListener('vantix-toast', handleToastEvent);
+    window.addEventListener('ventix-toast', handleToastEvent);
+    return () => window.removeEventListener('ventix-toast', handleToastEvent);
   }, []);
 
   // Keyboard Shortcuts Handler
@@ -155,7 +155,7 @@ export const DemoSystem: React.FC = () => {
     setJudgeModeActive(true);
     setJudgeStep(1);
     navigate('/');
-    triggerToast('success', 'Judge Walkthrough Mode Active', 'Highlighting key Vantix features.');
+    triggerToast('success', 'Judge Walkthrough Mode Active', 'Highlighting key Ventix features.');
   };
 
   const handleNextStep = () => {
@@ -287,7 +287,7 @@ export const DemoSystem: React.FC = () => {
           <div className="flex items-center gap-md">
             <span className="w-2.5 h-2.5 bg-system-purple rounded-full animate-pulse-slow shadow-ai-glow" />
             <span className="font-mono text-xs font-bold text-white tracking-widest uppercase">
-              Vantix Showcase // Step {judgeStep} of 5
+              Ventix Showcase // Step {judgeStep} of 5
             </span>
           </div>
 
@@ -327,7 +327,7 @@ export const DemoSystem: React.FC = () => {
         </div>
       )}
 
-      {/* 4. One-Click Show Why Vantix Wins FAB overlay */}
+      {/* 4. One-Click Show Why Ventix Wins FAB overlay */}
       {!judgeModeActive && (
         <div className="fixed bottom-[32px] right-[80px] lg:right-[400px] z-[7000]">
           <button
@@ -336,7 +336,7 @@ export const DemoSystem: React.FC = () => {
             className="flex items-center gap-xs px-md py-sm bg-system-purple hover:bg-system-purple/90 border border-system-purple/40 text-white rounded-full shadow-ai-glow font-mono text-[10px] uppercase font-bold tracking-wider transition-all duration-200 active:scale-95 group"
           >
             <Sparkles className="w-4 h-4 text-white group-hover:animate-pulse" />
-            <span>Show Why Vantix Wins</span>
+            <span>Show Why Ventix Wins</span>
           </button>
         </div>
       )}
@@ -358,7 +358,7 @@ export const DemoSystem: React.FC = () => {
 
             <div className="bg-obsidian-elevated/40 border border-system-border/60 rounded-xs p-md space-y-sm text-xs select-text">
               <div className="flex justify-between items-center font-mono border-b border-system-border/20 pb-2xs">
-                <span>SIMULATION_ID: VANTIX-94A2</span>
+                <span>SIMULATION_ID: VENTIX-94A2</span>
                 <span className="text-system-green">SUCCESSFUL RESOLUTION</span>
               </div>
 
@@ -392,8 +392,8 @@ export const DemoSystem: React.FC = () => {
                 Close View
               </button>
               <a 
-                href="data:text/plain;charset=utf-8,Vantix After Action Report%0AStatus: SUCCESS%0AResponse Time: 3.2m%0AQueue Wait Reduction: 16m%0A"
-                download="vantix_after_action_report.txt"
+                href="data:text/plain;charset=utf-8,Ventix After Action Report%0AStatus: SUCCESS%0AResponse Time: 3.2m%0AQueue Wait Reduction: 16m%0A"
+                download="ventix_after_action_report.txt"
                 aria-label="Download after action report summary text file"
                 className="flex items-center gap-xs px-md py-xs bg-system-cyan hover:bg-system-cyan/90 text-obsidian rounded-xs text-xs font-bold transition-all shadow-glow"
               >

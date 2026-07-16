@@ -1,1 +1,1 @@
-# Vantix Backend Package
+# Ventix Backend Package

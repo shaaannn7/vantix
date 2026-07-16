@@ -17,7 +17,7 @@ export const AuraFAB: React.FC = () => {
 
   const triggerGlobalToast = (type: 'info' | 'alert' | 'success', title: string, body: string) => {
     window.dispatchEvent(
-      new CustomEvent('vantix-toast', {
+      new CustomEvent('ventix-toast', {
         detail: { type, title, body }
       })
     );
